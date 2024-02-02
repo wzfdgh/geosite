@@ -27,38 +27,33 @@ jobs:
         shell: bash
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          repository: MetaCubeX/meta-rules-dat
+          repository: wzfdgh/geosite
 
       - name: Checkout Loyalsoldier/domain-list-custom
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: Loyalsoldier/domain-list-custom
           path: custom
 
       - name: Checkout v2fly/domain-list-community
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: v2fly/domain-list-community
           path: community
 
       - name: Checkout cokebar/gfwlist2dnsmasq
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: cokebar/gfwlist2dnsmasq
           path: gfwlist2dnsmasq
 
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: ./custom/go.mod
           cache-dependency-path: ./custom/go.sum
-
-      - name: Get geoip.dat relative files
-        run: |
-          wget https://github.com/Loyalsoldier/geoip/raw/release/geoip.dat
-          wget https://github.com/Loyalsoldier/geoip/raw/release/geoip.dat.sha256sum
 
       - name: Generate GFWList domains
         run: |
@@ -114,7 +109,7 @@ jobs:
 
       - name: Remove domains end with ".cn" in "temp-geolocation-!cn.txt" and write lists to data directory
         run: |
-          cat temp-cn.txt | grep -v google | grep -v manhua | grep -v ooklaserver | grep -v "acg.rip" | sort --ignore-case -u | perl -ne '/^((?=^.{1,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})*)/ && print "$1\n"' > ./community/data/cn
+          cat temp-cn.txt | grep -v google | grep -v manhua | grep -v ooklaserver | sort --ignore-case -u | perl -ne '/^((?=^.{1,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})*)/ && print "$1\n"' > ./community/data/cn
           cat temp-cn.txt | sort --ignore-case -u | perl -ne 'print if not /^((?=^.{3,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})+)/' > direct-tld-list.txt
           cat temp-geolocation-\!cn.txt | sort --ignore-case -u | perl -ne '/^((?=^.{1,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})*)/ && print "$1\n"' | perl -ne 'print if not /\.cn$/' > ./community/data/geolocation-\!cn
           cat temp-geolocation-\!cn.txt | sort --ignore-case -u | perl -ne 'print if not /^((?=^.{3,255})[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-_a-zA-Z0-9]{0,62})+)/' > proxy-tld-list.txt
@@ -151,158 +146,87 @@ jobs:
           curl -sSL https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OneDrive/OneDrive.list | ${{ env.SED }} > ./community/data/onedrive
           echo "sharepoint.cn" >> ./community/data/onedrive 
           curl -sSL https://raw.githubusercontent.com/xishang0128/rules/main/sharepoint.list > ./community/data/sharepoint
-          curl -sSL https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PrivateTracker/PrivateTracker.list | ${{ env.SED }} > ./community/data/tracker
-          curl -sSL https://gitea.com/XIU2/TrackersListCollection/raw/branch/master/all.txt | grep -i "\.[A-Z]" | grep -v tracker | sed 's/^.*\/\///g' | sed 's/:.*\/.*//g' >> ./community/data/tracker
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/BlockHttpDNS/BlockHttpDNS.list | ${{ env.SED }} > ./community/data/httpdns
+          # curl -sSL https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PrivateTracker/PrivateTracker.list | ${{ env.SED }} > ./community/data/tracker
+          # curl -sSL https://gitea.com/XIU2/TrackersListCollection/raw/branch/master/all.txt | grep -i "\.[A-Z]" | grep -v tracker | sed 's/^.*\/\///g' | sed 's/:.*\/.*//g' >> ./community/data/tracker
+          # curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/BlockHttpDNS/BlockHttpDNS.list | ${{ env.SED }} > ./community/data/httpdns
+          # echo sentry.io >>  ../community/data/openai
+          echo ipleak.net >> ./community/data/geolocation-\!cn && echo browserleaks.org >> ./community/data/geolocation-\!cn
 
-      - name: Build geosite.dat file
+#      - name: Build db and metadb file
+#        env:
+#          NO_SKIP: true
+#        run: |
+#          go install -trimpath -ldflags="-s -w -buildid=" github.com/metacubex/geo/cmd/geo@master
+#          geo convert site -i v2ray -o sing -f geosite.db ./custom/publish/geosite.dat
+#          geo convert site -i v2ray -o sing -f geosite-lite.db ./community/geosite-lite.dat
+#          geo convert ip -i v2ray -o sing -f geoip.db ./geoip.dat
+#          geo convert ip -i v2ray -o meta -f geoip.metadb ./geoip.dat
+#          geo convert ip -i v2ray -o sing -f geoip-lite.db ./geoip-lite.dat
+#          geo convert ip -i v2ray -o meta -f geoip-lite.metadb ./geoip-lite.dat
+
+#      - name: Convert geo to sing-rule-set
+#        env:
+#          NO_SKIP: true
+#        run: |
+#          mkdir -p ./sing-rule/geo
+#          cp ./geoip.dat ./geosite.db ./resouces/convert.sh ./sing-rule/geo/ 
+#          cd ./sing-rule/geo
+#          wget https://github.com/SagerNet/sing-box/releases/download/v1.8.0-alpha.1/sing-box-1.8.0-alpha.1-linux-amd64.tar.gz -O sing-box.tar.gz && tar zxvf sing-box.tar.gz && mv sing-box-1.8.0-alpha.1-linux-amd64/sing-box ./ && rm -r sing-box-1.8.0-alpha.1-linux-amd64
+#          wget https://github.com/IrineSistiana/mosdns/releases/download/v4.5.3/mosdns-linux-amd64.zip -O mosdns.zip && unzip mosdns.zip
+#          chmod 755 mosdns sing-box convert.sh && ./convert.sh
+#          rm mosdns* sing-box* convert.sh geoip.dat geosite.db LICENSE README.md config.yaml
+
+      - name: Build temp geosite.dat
         run: |
           cd custom || exit 1
-          # echo sentry.io >>  ../community/data/openai
-          echo ipleak.net >> ../community/data/geolocation-\!cn && echo browserleaks.org >> ../community/data/geolocation-\!cn
           go run ./ --datapath=../community/data
 
-      - name: Build geosite-lite.dat file
+      - name: Convert geosite to metadata
         env:
           NO_SKIP: true
-          SED: grep DOMAIN | grep -v "#" | sed 's/  - DOMAIN,/full:/g' | sed 's/  - DOMAIN-SUFFIX,//g' | sed 's/  - DOMAIN-KEYWORD,/keyword:/g'
+        run: |
+          mkdir -p ./community/tmp
+          cp ./custom/publish/geosite.dat ./community/tmp
+          cd ./community/tmp
+          wget https://github.com/IrineSistiana/mosdns/releases/download/v4.5.3/mosdns-linux-amd64.zip -O mosdns.zip && unzip mosdns.zip
+          chmod 755 mosdns
+          mkdir -p geosite
+          ./mosdns v2dat unpack-domain -o ./geosite/ geosite.dat
+          list=($(ls ./geosite | sed 's/geosite_//g' | sed 's/\.txt//g'))
+          for ((i=0;i<${#list[@]};i++)); do
+            mv ./geosite/geosite_${list[i]}.txt ./geosite/${list[i]}.list
+          done
+          rm mosdns* *.dat LICENSE README.md config.yaml
+
+      - name: Build geosite.dat file
+        env:
+          NO_SKIP: true
         run: |
           cd community || exit 1
-          mkdir -p data-lite
-          curl -sSL https://raw.githubusercontent.com/xishang0128/rules/main/biliintl.list > ./data-lite/biliintl
-          curl -sSL https://github.com/v2fly/domain-list-community/raw/master/data/ehentai > ./data-lite/ehentai
-          curl -sSL https://github.com/v2fly/domain-list-community/raw/master/data/private > ./data-lite/private
+          mkdir -p geo-data
+          code=(apple-cn apple bilibili biliintl cn ehentai geolocation-\!cn google-cn google line microsoft onedrive pixiv private sharepoint steam telegram twitter win-extra win-spy win-update youtube)
+          for((i=0;i<${#code[@]};i++));do
+          mkdir -p geosite
+            cp ./tmp/geosite/${code[i]}.list ./geo-data/${code[i]}
+          done
+          go run ./ --datapath=./geo-data --outputname geosite.dat
 
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/AbemaTV/AbemaTV.yaml | ${{ env.SED }} > ./data-lite/abema
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Apple/Apple_Classical.yaml | ${{ env.SED }} > ./data-lite/apple
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/AppleMusic/AppleMusic.yaml | ${{ env.SED }} > ./data-lite/applemusic
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/BiliBili/BiliBili.yaml | ${{ env.SED }} > ./data-lite/bilibili
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Bahamut/Bahamut.yaml | ${{ env.SED }} > ./data-lite/bahamut
-
-          curl -sSL https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China_Domain.yaml | grep - | sed "s/  - '+.//g" | sed "s/  - '/full:/g" | grep -v "#" | grep -v "acg.rip" | sed "s/'//g" > ./data-lite/cn
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Cloudflare/Cloudflare.yaml | ${{ env.SED }} > ./data-lite/cloudflare
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Google/Google.yaml | ${{ env.SED }} > ./data-lite/google
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/GitHub/GitHub.yaml | ${{ env.SED }} > ./data-lite/github
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Microsoft/Microsoft.yaml | ${{ env.SED }} > ./data-lite/microsoft
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Netflix/Netflix.yaml | ${{ env.SED }} > ./data-lite/netflix
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/OpenAI/OpenAI.yaml | ${{ env.SED }} > ./data-lite/openai
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/OneDrive/OneDrive.yaml | ${{ env.SED }} > ./data-lite/onedrive
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Pixiv/Pixiv.yaml | ${{ env.SED }} > ./data-lite/pixiv
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/ProxyLite/ProxyLite.yaml | ${{ env.SED }} > ./data-lite/proxy
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Spotify/Spotify.yaml | ${{ env.SED }} > ./data-lite/spotify
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Telegram/Telegram.yaml | ${{ env.SED }} > ./data-lite/telegram
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/Twitter/Twitter.yaml | ${{ env.SED }} > ./data-lite/twitter
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/TikTok/TikTok.yaml | ${{ env.SED }} > ./data-lite/tiktok
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/YouTube/YouTube.yaml | ${{ env.SED }} > ./data-lite/youtube
-          curl -sSL https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Clash/GlobalMedia/GlobalMedia.yaml | ${{ env.SED }} > ./data-lite/proxymedia
-
-          echo include:google >> ./data-lite/proxy && echo include:github >> ./data-lite/proxy && echo include:netflix >> ./data-lite/proxy
-          echo ipleak.net >> ./data-lite/proxy && echo browserleaks.org >> ./data-lite/proxy
-          echo "full:o33249.ingest.sentry.io" >>  ./data-lite/openai
-          go run ./ --datapath=./data-lite --outputname geosite-lite.dat
-
-      - name: Get geoip.dat relative files
-        run: |
-          wget -O geoip-lite.dat https://github.com/xishang0128/geoip/raw/release/geoip.dat
-          wget https://github.com/Loyalsoldier/geoip/raw/release/geoip.dat
-
-      - name: Build db and metadb file
-        env:
-          NO_SKIP: true
-        run: |
-          go install -trimpath -ldflags="-s -w -buildid=" github.com/metacubex/geo/cmd/geo@master
-          geo convert site -i v2ray -o sing -f geosite.db ./custom/publish/geosite.dat
-          geo convert site -i v2ray -o sing -f geosite-lite.db ./community/geosite-lite.dat
-          geo convert ip -i v2ray -o sing -f geoip.db ./geoip.dat
-          geo convert ip -i v2ray -o meta -f geoip.metadb ./geoip.dat
-          geo convert ip -i v2ray -o sing -f geoip-lite.db ./geoip-lite.dat
-          geo convert ip -i v2ray -o meta -f geoip-lite.metadb ./geoip-lite.dat
-
-      - name: Convert geo to sing-rule-set
-        env:
-          NO_SKIP: true
-        run: |
-          mkdir -p ./sing-rule/geo
-          cp ./geoip.dat ./geosite.db ./resouces/convert.sh ./sing-rule/geo/ 
-          cd ./sing-rule/geo
-          wget https://github.com/SagerNet/sing-box/releases/download/v1.8.0-alpha.1/sing-box-1.8.0-alpha.1-linux-amd64.tar.gz -O sing-box.tar.gz && tar zxvf sing-box.tar.gz && mv sing-box-1.8.0-alpha.1-linux-amd64/sing-box ./ && rm -r sing-box-1.8.0-alpha.1-linux-amd64
-          wget https://github.com/IrineSistiana/mosdns/releases/download/v4.5.3/mosdns-linux-amd64.zip -O mosdns.zip && unzip mosdns.zip
-          chmod 755 mosdns sing-box convert.sh && ./convert.sh
-          rm mosdns* sing-box* convert.sh geoip.dat geosite.db LICENSE README.md config.yaml
-
-
-      - name: Convert geo-lite to sing-rule-set
-        env:
-          NO_SKIP: true
-        run: |
-          mkdir -p ./sing-rule/geo-lite
-          cp ./geoip-lite.dat ./sing-rule/geo-lite/geoip.dat && cp ./geosite-lite.db ./sing-rule/geo-lite/geosite.db && cp ./resouces/convert.sh ./sing-rule/geo-lite/ 
-          cd ./sing-rule/geo-lite
-          wget https://github.com/SagerNet/sing-box/releases/download/v1.8.0-alpha.1/sing-box-1.8.0-alpha.1-linux-amd64.tar.gz -O sing-box.tar.gz && tar zxvf sing-box.tar.gz && mv sing-box-1.8.0-alpha.1-linux-amd64/sing-box ./ && rm -r sing-box-1.8.0-alpha.1-linux-amd64
-          wget https://github.com/IrineSistiana/mosdns/releases/download/v4.5.3/mosdns-linux-amd64.zip -O mosdns.zip && unzip mosdns.zip
-          chmod 755 mosdns sing-box convert.sh && ./convert.sh
-          rm mosdns* sing-box* convert.sh geoip.dat geosite.db LICENSE README.md config.yaml
-
-      - name: Convert geo to meta-rule-set
-        env:
-          NO_SKIP: true
-        run: |
-          mkdir -p ./meta-rule/geo
-          cp ./geoip.dat ./custom/publish/geosite.dat ./resouces/convert-clash.sh ./meta-rule/geo/ 
-          cd ./meta-rule/geo
-          wget https://github.com/IrineSistiana/mosdns/releases/download/v4.5.3/mosdns-linux-amd64.zip -O mosdns.zip && unzip mosdns.zip
-          chmod 755 mosdns convert-clash.sh && ./convert-clash.sh
-          rm mosdns* convert-clash.sh geoip.dat geosite.dat LICENSE README.md config.yaml
-
-      - name: Convert geo-lite to meta-rule-set
-        env:
-          NO_SKIP: true
-        run: |
-          mkdir -p ./meta-rule/geo-lite
-          cp ./geoip-lite.dat ./meta-rule/geo-lite/geoip.dat && cp ./community/geosite-lite.dat ./meta-rule/geo-lite/geosite.dat && cp ./resouces/convert-clash.sh ./meta-rule/geo-lite/ 
-          cd ./meta-rule/geo-lite
-          wget https://github.com/IrineSistiana/mosdns/releases/download/v4.5.3/mosdns-linux-amd64.zip -O mosdns.zip && unzip mosdns.zip
-          chmod 755 mosdns convert-clash.sh && ./convert-clash.sh
-          rm mosdns* convert-clash.sh geoip.dat geosite.dat LICENSE README.md config.yaml
-
-      - name: Convert bm7-rule-set to sing-rule-set
-        env:
-          NO_SKIP: true
-        run: |
-          mkdir -p ./sing-rule/bm7
-          cp ./resouces/bm7.sh ./sing-rule/bm7/
-          cd ./sing-rule/bm7
-          wget https://github.com/SagerNet/sing-box/releases/download/v1.8.0-alpha.1/sing-box-1.8.0-alpha.1-linux-amd64.tar.gz -O sing-box.tar.gz && tar zxvf sing-box.tar.gz && mv sing-box-1.8.0-alpha.1-linux-amd64/sing-box ./ && rm -r sing-box-1.8.0-alpha.1-linux-amd64
-          ls
-          chmod 755 bm7.sh && ./bm7.sh
-          rm -r bm7.sh sing-box* rule
+#      - name: Convert bm7-rule-set to sing-rule-set
+#        env:
+#          NO_SKIP: true
+#        run: |
+#          mkdir -p ./sing-rule/bm7
+#          cp ./resouces/bm7.sh ./sing-rule/bm7/
+#          cd ./sing-rule/bm7
+#          wget https://github.com/SagerNet/sing-box/releases/download/v1.8.0-alpha.1/sing-box-1.8.0-alpha.1-linux-amd64.tar.gz -O sing-box.tar.gz && tar zxvf sing-box.tar.gz && mv sing-box-1.8.0-alpha.1-linux-amd64/sing-box ./ && rm -r sing-box-1.8.0-alpha.1-linux-amd64
+#          ls
+#          chmod 755 bm7.sh && ./bm7.sh
+#          rm -r bm7.sh sing-box* rule
 
       - name: Move and zip files
         run: |
           mkdir -p ./publish/
-          wget https://raw.githubusercontent.com/xishang0128/geoip/release/Country.mmdb -O ./publish/country-lite.mmdb
-          wget https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb -O ./publish/country.mmdb
-          install -Dp ./geoip-lite.dat ./publish/
-          install -Dp ./geoip.dat ./publish/
-          install -Dp ./custom/publish/geosite.dat ./publish/
-          install -Dp ./community/geosite-lite.dat ./publish/
-          install -Dp ./geosite.db ./publish/
-          install -Dp ./geosite-lite.db ./publish/
-          install -Dp ./geoip.db ./publish/
-          install -Dp ./geoip-lite.db ./publish/
-          install -Dp ./geoip.metadb ./publish/
-          install -Dp ./geoip-lite.metadb ./publish/
-          cd ./publish || exit 1
-          sha256sum geoip-lite.dat > geoip-lite.dat.sha256sum
-          sha256sum geoip.dat > geoip.dat.sha256sum
-          sha256sum geosite.dat > geosite.dat.sha256sum
-          sha256sum geosite-lite.dat > geosite-lite.dat.sha256sum
-          sha256sum geosite.db > geosite.db.sha256sum
-          sha256sum geosite-lite.db > geosite-lite.db.sha256sum
-          sha256sum geoip.db > geoip.db.sha256sum
-          sha256sum geoip-lite.db > geoip-lite.db.sha256sum
-          sha256sum geoip.metadb > geoip.metadb.sha256sum
-          sha256sum geoip-lite.metadb > geoip-lite.metadb.sha256sum
+          install -Dp ./community/geosite.dat ./publish/
 
       - name: Delete current release assets
         uses: andreaswilli/delete-release-assets-action@v3.0.0
@@ -311,55 +235,17 @@ jobs:
           tag: latest
           deleteOnlyFromDrafts: false
 
-      - name: Create and Upload Release
-        id: upload_release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          release_name: Release ${{ env.BUILDTIME }}
-          tag: latest
-          file_glob: true
-          overwrite: true
-          file: ./publish/*
-
       - name: Git push assets to "release" branch
         run: |
           cd publish || exit 1
           git init
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "wzfdgh"
+          git config --local user.email "93830081+wzfdgh@users.noreply.github.com"
           git checkout -b release
           git add .
-          git commit -m "Released on ${{ env.BUILDTIME }}"
+          git commit -m release
           git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
           git push -f -u origin release
-
-      - name: Git push assets to "sing-rule" branch
-        run: |
-            cd sing-rule || exit 1
-            ls
-            git init
-            git config --local user.name "github-actions[bot]"
-            git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git checkout -b sing
-            git add .
-            git commit -m "Released on ${{ env.BUILDTIME }}"
-            git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
-            git push -f -u origin sing
-
-      - name: Git push assets to "meta-rule" branch
-        run: |
-            cd meta-rule || exit 1
-            ls
-            git init
-            git config --local user.name "github-actions[bot]"
-            git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git checkout -b meta
-            git add .
-            git commit -m "Released on ${{ env.BUILDTIME }}"
-            git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
-            git push -f -u origin meta
-
 
       - name: Purge jsdelivr CDN
         run: |
@@ -367,3 +253,21 @@ jobs:
           for file in $(ls); do
             curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}"
           done
+
+      - name: Upload files to GitHub release
+        id: upload_release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          release_name: latest
+          tag: latest
+          file_glob: true
+          overwrite: true
+          file: ./publish/*
+          body: ${{ env.BUILDTIME }}
+
+      - name: Cleanup Workflow
+        uses: Mattraks/delete-workflow-runs@main
+        with:
+          retain_days: 0
+          keep_minimum_runs: 1
