@@ -151,6 +151,7 @@ jobs:
           # curl -sSL https://github.com/blackmatrix7/ios_rule_script/raw/master/rule/Clash/BlockHttpDNS/BlockHttpDNS.list | ${{ env.SED }} > ./community/data/httpdns
           # echo sentry.io >>  ../community/data/openai
           echo ipleak.net >> ./community/data/geolocation-\!cn && echo browserleaks.org >> ./community/data/geolocation-\!cn
+          echo xn--ngstr-cn-8za9o.com >> ./community/data/google
 
 #      - name: Build db and metadb file
 #        env:
