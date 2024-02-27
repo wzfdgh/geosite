@@ -266,9 +266,3 @@ jobs:
           overwrite: true
           file: ./publish/*
           body: ${{ env.BUILDTIME }}
-
-      - name: Cleanup Workflow
-        uses: Mattraks/delete-workflow-runs@main
-        with:
-          retain_days: 0
-          keep_minimum_runs: 1
