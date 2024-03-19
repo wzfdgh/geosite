@@ -165,15 +165,11 @@ jobs:
           mkdir -p ./community/tmp
           cp ./custom/publish/geosite.dat ./community/tmp
           cd ./community/tmp
-          wget https://github.com/IrineSistiana/mosdns/releases/download/v4.5.3/mosdns-linux-amd64.zip -O mosdns.zip && unzip mosdns.zip
-          chmod 755 mosdns
-          mkdir -p geosite
-          ./mosdns v2dat unpack-domain -o ./geosite/ geosite.dat
-          list=($(ls ./geosite | sed 's/geosite_//g' | sed 's/\.txt//g'))
-          for ((i=0;i<${#list[@]};i++)); do
-            mv ./geosite/geosite_${list[i]}.txt ./geosite/${list[i]}.list
-          done
-          rm mosdns* *.dat LICENSE README.md config.yaml
+          wget https://github.com/MetaCubeX/geo/releases/download/v1.1/geo-linux-amd64 -O geo
+          chmod +x geo
+          mkdir geosite
+          ./geo unpack site -d geosite geosite.dat
+          rm geo
 
       - name: Build geosite.dat file
         env:
@@ -183,8 +179,7 @@ jobs:
           mkdir -p geo-data
           code=(apple-cn apple bilibili biliintl cn ehentai geolocation-\!cn google-cn google line microsoft onedrive pixiv private sharepoint steam telegram twitter win-extra win-spy win-update youtube)
           for((i=0;i<${#code[@]};i++));do
-          mkdir -p geosite
-            cp ./tmp/geosite/${code[i]}.list ./geo-data/${code[i]}
+            cp ./tmp/geosite/${code[i]} ./geo-data/${code[i]}
           done
           go run ./ --datapath=./geo-data --outputname geosite.dat
 
