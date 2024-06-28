@@ -178,7 +178,7 @@ jobs:
         run: |
           cd community || exit 1
           mkdir -p geo-data
-          code=(apple-cn apple bilibili biliintl cn ehentai geolocation-\!cn google-cn google line microsoft onedrive pixiv private sharepoint steam telegram twitter win-extra win-spy win-update youtube)
+          code=(apple-cn apple bilibili biliintl cn ehentai geolocation-\!cn google-cn googlefcm google line microsoft onedrive pixiv private sharepoint steam telegram twitter win-extra win-spy win-update youtube)
           for((i=0;i<${#code[@]};i++));do
             cp ./tmp/geosite/${code[i]} ./geo-data/${code[i]}
             sed -i 's/regex:/regexp:/g; s/plain:/keyword:/g' ./geo-data/${code[i]}
